@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bosun Chow | Portfolio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&family=Playfair+Display:ital,wght@0,400;1,400&display=swap');
+        
+        body { margin: 0; background-color: #fcfaf9; font-family: 'Inter', sans-serif; overflow-x: hidden; color: #1a1a1a; scroll-behavior: smooth; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .text-serif { font-family: 'Playfair Display', serif; }
+
+        .underline-expand { position: relative; display: inline-block; }
+        .underline-expand::after { 
+            content: ''; position: absolute; width: 0; height: 1px; bottom: -2px; left: 0; 
+            background-color: #C33E19; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); 
+        }
+        .group:hover .underline-expand::after { width: 100%; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in { animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useMemo } = React;
+
+        const WORKS_DATABASE = [
+            {
+                id: "towards-the-sun",
+                title: "Towards the Sun that never sets",
+                year: "2025",
+                category: "Chamber Music",
+                instrumentation: "String Quartet",
+                status: "Premiered",
+                performers: ["Eliza (Vln I)", "Liam Baille (Vln II)", "Layla Maitri (Vla)", "David Bo (Vcl)"],
+                programNotes: "This piece explores the concept of eternal twilight through microtonal shifts and sustained harmonics. The quartet functions as a single resonating body.",
+                links: { score: "https://www.dropbox.com/scl/fi/x1jytl2qdmp9n5r332y40/Towards-the-Sun-that-never-sets_String-Quartet_Bosun-Chow.pdf?rlkey=4b094s5hwhpvzyptaqz92aee2&st=d4vc69hb&dl=0", audio: "#" }
+            },
+            {
+                id: "trio-f-v-c",
+                title: "Trio for Flute, Viola and Cello",
+                year: "2022",
+                category: "Chamber Music",
+                instrumentation: "Flute, Viola, and Cello",
+                status: "Archive",
+                performers: ["Clara Hsu (Fl)", "Julian Grant (Vla)", "Fiona May (Vcl)"],
+                programNotes: "An exploration of interlocking timbres and rhythmic counterpoint between these three distinct voices, focusing on the shared resonance of open strings and breath.",
+                links: { score: "#", audio: "#" }
+            },
+            {
+                id: "derive",
+                title: "dérive dérive dérive",
+                year: "2025",
+                category: "Acous-electronic",
+                instrumentation: "Saxophone and Electronics (Max/MSP)",
+                status: "In Progress",
+                performers: ["Julian Smith (Sax)", "Sound Projection by Author"],
+                programNotes: "An interactive work where the Max/MSP patch analyzes the saxophonist's spectral data in real-time.",
+                links: { score: null, audio: "#" }
+            },
+            {
+                id: "we-live-to-die",
+                title: "We Live to Die",
+                year: "2024",
+                category: "Song",
+                instrumentation: "Produced Track",
+                status: "Released",
+                credits: [
+                    { role: "Producer", name: "Bosun Chow" },
+                    { role: "Mixing", name: "James Thorne" },
+                    { role: "Recording", name: "Elias Vance" },
+                    { role: "Toplining", name: "Sienna Miller" },
+                    { role: "Vocals", name: "Elena Ross" },
+                    { role: "Guitar", name: "Marcus Vane" },
+                    { role: "Drums", name: "Julian Grant" },
+                    { role: "Bass", name: "Clara Hsu" },
+                    { role: "Strings", name: "Ami Suzuki" },
+                    { role: "Piano", name: "David Bo" }
+                ],
+                programNotes: "A produced track exploring the existential paradox of existence and finality, blending organic textures with industrial percussion.",
+                links: { audio: "#" }
+            },
+            {
+                id: "voices-piano",
+                title: "Piece for Voices and Piano",
+                year: "2023",
+                category: "Chamber Music",
+                instrumentation: "Sopranos, Mezzo-Soprano and Piano",
+                status: "Archive",
+                programNotes: "A setting of fragmented texts dealing with memory and loss.",
+                links: { score: "#", audio: "#" }
+            },
+            {
+                id: "mise-en-place",
+                title: "That's why you do mise-en-place",
+                year: "2023",
+                category: "Acous-electronic",
+                instrumentation: "Viola da Gamba, Double Bass and Voice",
+                status: "Archive",
+                programNotes: "A sonic meditation on preparation and ritual.",
+                links: { audio: "#" }
+            }
+        ];
+
+        const CATEGORY_ORDER = ["Chamber Music", "Acous-electronic", "Acousmatic", "Song"];
+
+        const Icons = {
+            X: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>,
+            Music: () => <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>,
+            User: () => <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>,
+            ArrowLeft: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>,
+            Instagram: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>,
+            Facebook: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>,
+            Youtube: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"></path><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon></svg>
+        };
+
+        function App() {
+            const [view, setView] = useState(null); 
+            const [isActive, setIsActive] = useState(false);
+            const [selectedWorkId, setSelectedWorkId] = useState(null);
+
+            const groupedWorks = useMemo(() => {
+                const groups = WORKS_DATABASE.reduce((acc, work) => {
+                    const cat = work.category || "Other";
+                    if (!acc[cat]) acc[cat] = [];
+                    acc[cat].push(work);
+                    return acc;
+                }, {});
+                return groups;
+            }, []);
+
+            const selectedWork = useMemo(() => WORKS_DATABASE.find(w => w.id === selectedWorkId), [selectedWorkId]);
+
+            const handleExpand = (v) => {
+                setView(v);
+                setTimeout(() => setIsActive(true), 100);
+            };
+
+            const handleClose = (e) => {
+                if(e) e.stopPropagation();
+                setIsActive(false);
+                setTimeout(() => { setView(null); setSelectedWorkId(null); }, 400);
+            };
+
+            return (
+                <div className="min-h-screen bg-[#fcfaf9]">
+                    {/* HOME VIEW */}
+                    <main className={`flex flex-col items-center justify-center min-h-[80vh] pt-32 transition-opacity duration-700 ${view ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+                        <div className="text-center mb-48">
+                            <h1 className="text-5xl md:text-8xl text-serif italic font-light text-slate-900 mb-6 tracking-tighter">Bosun Chow</h1>
+                            <div className="flex justify-center items-center gap-6 text-[10px] uppercase tracking-[0.6em] font-bold text-slate-400">
+                                <span>Composer</span>
+                                <div className="w-1 h-1 bg-slate-200 rounded-full" />
+                                <span>Arranger</span>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-row gap-12 md:gap-24 relative z-10">
+                            {['works', 'about'].map(type => (
+                                <button 
+                                    key={type}
+                                    onClick={() => handleExpand(type)}
+                                    className="group flex flex-col items-center gap-4 focus:outline-none"
+                                >
+                                    <div className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-[#FFC3BB] flex items-center justify-center text-[#C33E19] shadow-xl shadow-orange-900/5 group-hover:bg-[#fcc9c2] group-hover:scale-105 transition-all duration-500">
+                                        {type === 'works' ? <Icons.Music /> : <Icons.User />}
+                                    </div>
+                                    <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[#C33E19]">{type}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </main>
+
+                    {/* EXPANDED CONTENT VIEW */}
+                    {view && (
+                        <div 
+                            className={`fixed inset-0 z-[100] bg-[#fcfaf9] transition-all duration-700 ease-in-out ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+                        >
+                            <button 
+                                onClick={handleClose} 
+                                className="fixed top-8 right-8 md:top-12 md:right-12 z-[110] p-4 text-[#C33E19]/40 hover:text-[#C33E19] hover:rotate-90 transition-all duration-500 bg-white/50 backdrop-blur-md rounded-full shadow-sm"
+                            >
+                                <Icons.X />
+                            </button>
+
+                            <div className="h-full overflow-y-auto no-scrollbar pt-32 pb-64">
+                                <div className="max-w-4xl mx-auto px-8 md:px-12 animate-fade-in">
+                                    {view === 'works' ? (
+                                        selectedWork ? (
+                                            <article className="space-y-12">
+                                                <button onClick={() => setSelectedWorkId(null)} className="flex items-center gap-3 text-[#C33E19] text-[10px] font-black uppercase tracking-widest hover:-translate-x-2 transition-transform">
+                                                    <Icons.ArrowLeft /> Back to Index
+                                                </button>
+                                                <div className="space-y-6">
+                                                    <p className="text-[10px] font-mono text-[#C33E19]/60 tracking-widest">[{selectedWork.year}]</p>
+                                                    <h2 className="text-5xl md:text-7xl text-serif italic text-slate-900 tracking-tight">{selectedWork.title}</h2>
+                                                    <p className="text-slate-400 uppercase tracking-[0.3em] text-[11px] font-bold">{selectedWork.instrumentation}</p>
+                                                </div>
+                                                <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-16 border-t border-[#C33E19]/10 pt-16">
+                                                    <div className="text-2xl text-slate-700 leading-relaxed font-light italic text-serif">
+                                                        <p>{selectedWork.programNotes}</p>
+                                                    </div>
+                                                    <div className="space-y-8">
+                                                        {selectedWork.credits ? (
+                                                            <div className="space-y-6">
+                                                                <p className="text-[9px] uppercase tracking-widest text-[#C33E19] font-black">Credits</p>
+                                                                <div className="grid grid-cols-1 gap-y-4">
+                                                                    {selectedWork.credits.map((c, i) => (
+                                                                        <div key={i} className="flex flex-col">
+                                                                            <span className="text-[8px] uppercase tracking-widest text-slate-400 font-bold">{c.role}</span>
+                                                                            <span className="text-sm text-slate-700 font-medium">{c.name}</span>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        ) : selectedWork.performers && (
+                                                            <div className="space-y-3">
+                                                                <p className="text-[9px] uppercase tracking-widest text-[#C33E19] font-black">Performers</p>
+                                                                <ul className="space-y-2">
+                                                                    {selectedWork.performers.map((p, i) => (
+                                                                        <li key={i} className="text-sm text-slate-500 flex items-center gap-2">
+                                                                            <span className="w-1 h-1 bg-[#C33E19]/20 rounded-full" /> {p}
+                                                                        </li>
+                                                                    ))}
+                                                                </ul>
+                                                            </div>
+                                                        )}
+                                                        <div className="pt-4 flex flex-col gap-3">
+                                                            {selectedWork.links?.score && <a href={selectedWork.links.score} target="_blank" className="text-[10px] font-black uppercase tracking-widest text-white bg-slate-900 px-6 py-4 text-center hover:bg-[#C33E19] transition-colors">View Score</a>}
+                                                            {selectedWork.links?.audio && <a href={selectedWork.links.audio} className="text-[10px] font-black uppercase tracking-widest text-slate-900 border border-slate-200 px-6 py-4 text-center hover:bg-white transition-colors">Listen</a>}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </article>
+                                        ) : (
+                                            <div className="space-y-24">
+                                                <header className="space-y-4">
+                                                    <p className="text-[#C33E19] text-[10px] font-black uppercase tracking-[0.5em]">Catalogue</p>
+                                                    <h2 className="text-5xl md:text-7xl text-serif italic text-slate-900 tracking-tighter">Selected Works</h2>
+                                                </header>
+                                                <div className="space-y-20">
+                                                    {CATEGORY_ORDER.map(cat => groupedWorks[cat] && (
+                                                        <section key={cat} className="space-y-10">
+                                                            <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-[#C33E19]/30 border-b border-[#C33E19]/10 pb-4">{cat}</h3>
+                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-12">
+                                                                {groupedWorks[cat].map(work => (
+                                                                    <div key={work.id} onClick={() => setSelectedWorkId(work.id)} className="group cursor-pointer">
+                                                                        <div className="flex items-baseline gap-4 mb-2">
+                                                                            <span className="text-[10px] font-mono text-[#C33E19]/40">[{work.year}]</span>
+                                                                            <h4 className="text-2xl text-serif italic text-slate-900 group-hover:text-[#C33E19] transition-colors underline-expand">{work.title}</h4>
+                                                                        </div>
+                                                                        <p className="text-[9px] uppercase tracking-widest text-slate-400 font-bold ml-12">{work.instrumentation}</p>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </section>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )
+                                    ) : (
+                                        <div className="space-y-12">
+                                            <header className="space-y-4">
+                                                <p className="text-[#C33E19] text-[10px] font-black uppercase tracking-[0.5em]">About</p>
+                                                <h2 className="text-5xl md:text-7xl text-serif italic text-slate-900 tracking-tighter">Bosun Chow</h2>
+                                            </header>
+                                            
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 border-t border-[#C33E19]/10 pt-12 items-start">
+                                                {/* SINGLE PHOTO TOP LEFT */}
+                                                <div className="aspect-[4/5] bg-slate-100 flex items-center justify-center overflow-hidden relative">
+                                                    <div className="absolute inset-0 bg-[#C33E19]/5" />
+                                                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">Profile Photo</span>
+                                                </div>
+                                                
+                                                <div className="text-2xl text-slate-700 font-light italic text-serif leading-relaxed space-y-8">
+                                                    <p className="text-3xl text-slate-900 leading-tight">Composer and arranger exploring the physics of sound through fragile acoustic textures.</p>
+                                                    <p>My work focuses on sustained states and minimal variations, creating environments where time feels suspended. I am particularly interested in the intersection of traditional instrumentation and interactive electronic processing.</p>
+                                                    <p>Based in the intersection of organic performance and digital manipulation, I aim to challenge the listener's perception of duration and sonic presence.</p>
+                                                </div>
+                                            </div>
+
+                                            <div className="pt-16">
+                                                <button onClick={handleClose} className="px-10 py-5 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-[#C33E19] transition-all shadow-xl shadow-slate-900/10">Back to Home</button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* CONTACT / FOOTER */}
+                    <footer className={`flex flex-col items-center py-48 transition-opacity duration-700 ${view ? 'opacity-0' : 'opacity-100'}`}>
+                        <p className="text-[#C33E19] text-[10px] font-black uppercase tracking-[0.5em] mb-10">Contact</p>
+                        
+                        {/* REARRANGED CONTACT UNIT */}
+                        <div className="flex items-center gap-12 mb-24">
+                            {/* EMAIL ON LEFT */}
+                            <div className="group">
+                                <a href="mailto:bosunchow@gmail.com" className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-500 hover:text-[#C33E19] transition-all underline-expand">
+                                    Email
+                                </a>
+                            </div>
+
+                            {/* VERTICAL DIVIDER (OPTIONAL/SUBTLE) */}
+                            <div className="w-[1px] h-4 bg-slate-200" />
+
+                            {/* SOCIALS ON RIGHT */}
+                            <div className="flex gap-4">
+                                <a href="#" className="p-2 text-slate-400 hover:text-[#C33E19] transition-colors"><Icons.Instagram /></a>
+                                <a href="#" className="p-2 text-slate-400 hover:text-[#C33E19] transition-colors"><Icons.Facebook /></a>
+                                <a href="#" className="p-2 text-slate-400 hover:text-[#C33E19] transition-colors"><Icons.Youtube /></a>
+                            </div>
+                        </div>
+
+                        <p className="text-[9px] uppercase tracking-[0.4em] text-slate-300 font-bold">© {new Date().getFullYear()} Bosun Chow</p>
+                    </footer>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
